@@ -3,6 +3,8 @@ from investment import *
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
 
 
+
+'''Old code, reference only'''
 def single_etf_simulation():
 
     etf_irlanda = EtfIrlanda(STARTING_CAPITAL,0)
@@ -31,42 +33,76 @@ def single_etf_simulation():
     print(f"END_OF_INVESTMENT. etf_italia/irlanda percentage gain difference {etf_italia.get_gain_percentage()-etf_irlanda.get_gain_percentage()}, etf_italia/irlanda absolute gain difference {etf_italia.get_gain_absolute() - etf_irlanda.get_gain_absolute()}")
 
 
-def portfolio_simulation ():
-
-    year = 0
-    portfolio_irlanda = Portfolio("etf_irlanda")
-    print(f"=====LEGEND=====\nbet == before exit taxes\naet == after exit taxes \n")
-
-    while year < YEARS:
-        print(year)
-        if year == 0:
-            etf_irlanda = EtfIrlanda(STARTING_CAPITAL, year)
-            portfolio_irlanda.perform_pac(etf_irlanda)
-        portfolio_irlanda.yearly_cycle()
-        year += 1
-
-    etf_irlanda.exit_investment()
-    '''
-    print("=====END OF INVESTMENT=====")
-    portfolio_irlanda.exit_investment()
-    print(portfolio_irlanda)
-    print("\n")
-    '''
-
-def updated_etf_irlanda_per_unit():
-    year = 0
-    unit_value = 1
+'''Test ETF IRELAND BEHAVIOUR'''
+def updated_etf_irlanda_per_unit(input_year=0, input_unit_value=1):
+    year = input_year
+    unit_value = input_unit_value
     etf_irlanda = EtfIrlanda(STARTING_CAPITAL, 0, unit_value)
 
     while year < YEARS:
-        print(year)
+        smart_print(year)
         etf_irlanda.yearly_cycle()
         year += 1
 
+    smart_print(etf_irlanda, True)
     etf_irlanda.exit_investment()
 
 
+'''Test ETF PENSION SINGLE INVESTMENT BEHAVIOUR'''
+def single_pension_investment_simulation(input_year=0, input_unit_value=1):
+    year = input_year
+    unit_value = input_unit_value
+    pension_investment = PensionInvestment(STARTING_CAPITAL, 0, unit_value)
+
+    while year < YEARS:
+        smart_print(year)
+        pension_investment.yearly_cycle()
+        year += 1
+
+    pension_investment.exit_investment()
+    print(pension_investment)
+
+def portfolio_simulation():
+    year = 0
+    unit_value = 1
+    unit_value_multiplier = 1 + INTEREST_RATE
+    portfolio_ireland = Portfolio("portfolio_ireland")
+    print(f"=====LEGEND=====\nbet == before exit taxes\naet == after exit taxes \n")
+
+    while year < YEARS:
+        smart_print(year)
+        etf_ireland = EtfIrlanda(STARTING_CAPITAL,year,unit_value)
+        portfolio_ireland.perform_pac(etf_ireland)
+        portfolio_ireland.yearly_cycle()
+        year += 1
+        unit_value = unit_value * unit_value_multiplier
+    portfolio_ireland.exit_investment()
+    smart_print(portfolio_ireland,True)
+    return portfolio_ireland
 
 
-updated_etf_irlanda_per_unit()
-#### single etf completely reviewed, continue with 1)evaluate adding dividends 2) portfolio
+
+def pension_simulation():
+    year = 0
+    unit_value = 1
+    unit_value_multiplier = 1 + INTEREST_RATE
+    pension_ireland = PensionPortfolio("pension_ireland")
+    gross_capital = STARTING_CAPITAL / 0.6 # getting gross value that goes into pension. x - 0.4x = y -> x = y / 0.6. Where x = gross value before taxes
+    while year < YEARS:
+        pension_investement = PensionInvestment(gross_capital,year,unit_value)
+        pension_ireland.perform_pac(pension_investement)
+        pension_ireland.yearly_cycle()
+        year += 1
+        unit_value = unit_value * unit_value_multiplier
+    pension_ireland.exit_investment()
+    smart_print(pension_ireland, True)
+    return pension_ireland
+
+
+etf_portfolio = portfolio_simulation()
+pension = pension_simulation()
+
+print("\n\n===============FINAL REPORT===============")
+print("Comparing Investment via etf with investment via pension over the same time range. Same capital investment, same market behaviour(different fees)")
+print(f"ABSOLUTE CAPITAL: pension {pension.exit_capital}, etf investment {etf_portfolio.exit_capital}")
+print(f"growth difference: {round((pension.exit_capital/etf_portfolio.exit_capital)*100,2) - 100}%")

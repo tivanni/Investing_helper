@@ -68,7 +68,7 @@ class Investment:
         self.apply_fees()
         self.apply_interest()
         self.increase_current_year()
-        print(f"ETF REPORT. Name {self.id}, current capital {round(self.current_capital,3)}, unit value {round(self.unit_value,3)}, unit_numbers {round(self.unit_numbers,3)}, tax paid {round(self.tax_paid,3)}, percentage gain(bet) {round(self.get_gain_percentage(),3)}, absolute gain((bet) {round(self.get_gain_absolute(),3)}")
+        smart_print(f"ETF REPORT. Name {self.id}, current capital {round(self.current_capital,3)}, unit value {round(self.unit_value,3)}, unit_numbers {round(self.unit_numbers,3)}, tax paid {round(self.tax_paid,3)}, percentage gain(bet) {round(self.get_gain_percentage(),3)}, absolute gain((bet) {round(self.get_gain_absolute(),3)}")
 
     def get_gain_percentage(self):
         capital = self.current_capital
@@ -147,7 +147,15 @@ class EtfIrlanda(Investment):
 
     def exit_investment(self):
         self.pay_tax("EXIT_INVESTMENT_EVENT","ei_tax", False)
-        print(f"EXIT_REPORT. Name {self.id}, starting capital {round(self.starting_capital,3)}, current capital {round(self.current_capital,3)}, exit capital {round(self.exit_capital,3)}, unit value {round(self.unit_value,3)}, unit numbers {round(self.unit_numbers,3)}, tax paid {round(self.tax_paid,3)}, percentage gain(aet) {round(self.get_gain_percentage(),3)}, absolute gain((aet) {round(self.get_gain_absolute(),3)}")
+        smart_print(f"EXIT_REPORT. Name {self.id}, starting capital {round(self.starting_capital,3)}, current capital {round(self.current_capital,3)}, exit capital {round(self.exit_capital,3)}, unit value {round(self.unit_value,3)}, unit numbers {round(self.unit_numbers,3)}, tax paid {round(self.tax_paid,3)}, percentage gain(aet) {round(self.get_gain_percentage(),3)}, absolute gain((aet) {round(self.get_gain_absolute(),3)}")
+
+class PensionInvestment(Investment):
+    FEE = FEE_PENSION
+
+    def exit_investment(self):
+        #no capital gain taxes
+        self.exit_capital = self.current_capital
+        smart_print(f"PENSION_EXIT_INVESTMENT: {self.current_capital}")
 
 class Portfolio():
 
@@ -158,6 +166,8 @@ class Portfolio():
         self.name = name
 
     def perform_pac(self, investment):
+        if isinstance(investment, PensionInvestment):
+            raise ValueError("PensionPortfolio: can't perform PAC as Investment is of wrong type")
         self.etfs.append(investment)
 
     def yearly_cycle(self):
@@ -185,9 +195,60 @@ class Portfolio():
             print(etf)
 
     def __repr__(self):
-        return f"PORTFOLIO REPORT. Name {self.name}, absolute gain {self.get_gain_absolute()}, percentage gain {self.get_gain_percentage()}, invested capital {self.invested_capital}, exit capital {self.exit_capital}, eft# {len(self.etfs)}"
+        return f"PORTFOLIO REPORT. Name {self.name}, invested capital {self.invested_capital}, exit capital {self.exit_capital}, percentage gain {self.get_gain_percentage()}, absolute gain {self.get_gain_absolute()},eft# {len(self.etfs)}"
 
 
+class PensionPortfolio(Portfolio):
+
+    def __init__(self, name):
+        self.etfs = []
+        self.invested_capital = 0
+        self.exit_capital = 0
+        self.name = name
+        self.tax_paid = 0
+        self.actual_invested_capital = 0 # when putting money into pension, no tax are applied. this represents money
+                                         # was received in payroll instead of investing it
+
+    def perform_pac(self, investment):
+        if not isinstance(investment, PensionInvestment):
+            raise ValueError("PensionPortfolio: can't perform PAC as Investment is of wrong type")
+        self.etfs.append(investment)
+
+    def get_invested_capital(self):
+        for etf in self.etfs:
+            self.invested_capital += etf.starting_capital
+        self.actual_invested_capital = self.invested_capital * 0.6 # assuming 40% tax would be removed
+
+    def exit_investment(self):
+        self.get_invested_capital()
+        exit_capital_before_tax= 0
+        for etf in self.etfs:
+            etf.exit_investment()
+            exit_capital_before_tax += int(etf.exit_capital)
+        if exit_capital_before_tax < 200000:
+            self.exit_capital = exit_capital_before_tax
+            self.tax_paid = 0
+            smart_print(f"PENSION_EXIT_INVESTMENT: exit capital below 200000, no tax applied", True)
+        elif exit_capital_before_tax > 200000 and exit_capital_before_tax < 500000:
+            self.exit_capital = 200000 + (exit_capital_before_tax-200000)*0.8 # amount above 200.000 taxed at 20%
+            self.tax_paid = exit_capital_before_tax - self.exit_capital
+            smart_print(f"PENSION_EXIT_INVESTMENT: 200.000<exit capital<500000, exit_capital_before tax {exit_capital_before_tax}, exit_capital_after_taxes {self.exit_capital}, tax paid {self.tax_paid}", True)
+        elif exit_capital_before_tax > 500000:
+            self.exit_capital = 200000 + 300000*0.8 + (exit_capital_before_tax-500000)*0.52 #Considering Marginal Rate 41% income tax, 7% USC. Excluding 4% PRSI
+            self.tax_paid = exit_capital_before_tax - self.exit_capital
+            smart_print(f"PENSION_EXIT_INVESTMENT: exit capital>500000, exit_capital_before tax {exit_capital_before_tax}, exit_capital_after_taxes {self.exit_capital}, tax paid {self.tax_paid}", True)
+
+        else:
+            raise ValueError("PensionPortfolio:value outside range")
+
+    def get_gain_percentage(self):
+        return int((self.exit_capital / self.actual_invested_capital) * 100 - 100)
+
+    def get_gain_absolute(self):
+        return int((self.exit_capital - self.actual_invested_capital))
+
+    def __repr__(self):
+        return f"PENSION REPORT. Name {self.name}, invested capital {self.invested_capital}, actual invested capital {self.actual_invested_capital} exit capital {self.exit_capital}, percentage gain {self.get_gain_percentage()}, absolute gain {self.get_gain_absolute()},eft# {len(self.etfs)}"
 
 
 
