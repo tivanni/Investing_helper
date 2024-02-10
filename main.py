@@ -72,7 +72,8 @@ def portfolio_simulation():
     while year < YEARS:
         smart_print(year)
         etf_ireland = EtfIrlanda(STARTING_CAPITAL,year,unit_value)
-        portfolio_ireland.perform_pac(etf_ireland)
+        if year == 0: #this is to remove pac, only initial capital. Remove this line and fix indent for line below to Add Pac
+            portfolio_ireland.perform_pac(etf_ireland)
         portfolio_ireland.yearly_cycle()
         year += 1
         unit_value = unit_value * unit_value_multiplier
@@ -98,7 +99,7 @@ def pension_simulation():
     smart_print(pension_ireland, True)
     return pension_ireland
 
-
+'''Previous output
 etf_portfolio = portfolio_simulation()
 pension = pension_simulation()
 
@@ -106,3 +107,7 @@ print("\n\n===============FINAL REPORT===============")
 print("Comparing Investment via etf with investment via pension over the same time range. Same capital investment, same market behaviour(different fees)")
 print(f"ABSOLUTE CAPITAL: pension {pension.exit_capital}, etf investment {etf_portfolio.exit_capital}")
 print(f"growth difference: {round((pension.exit_capital/etf_portfolio.exit_capital)*100,2) - 100}%")
+'''
+etf_portfolio = portfolio_simulation()
+print(f"ABSOLUTE CAPITAL:  etf investment {etf_portfolio.exit_capital}")
+
