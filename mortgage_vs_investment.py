@@ -28,14 +28,14 @@ different mortgage terms. hope it's helpful!
 #Define inputs
 ##Mortgage Inputs
 MORTGAGE_TERMS_TO_SIMULATE = [20,19,18,17,16,15,14,13,12,11,10,9,8,7,6]
-MORTGAGE_PRINCIPAL = 500000
-MORTGAGE_INTEREST_RATE = .0375 #
+MORTGAGE_PRINCIPAL = 300000
+MORTGAGE_INTEREST_RATE = .0475 # 3.75%
 MORTGAGE_PARTNER_CONTRIBUTION = 500
 ##Investment Inputs
-TOTAL_MONEY_TO_INVEST_MONTHLY = 5000
-INVESTMENT_INTEREST_RATE = 0.07 # reasonable for a 80/20 well diversified stock portfolio
+TOTAL_MONEY_TO_INVEST_MONTHLY = 4000
+INVESTMENT_INTEREST_RATE = 0.22
 ##Time Inputs
-TOTAL_YEARS_TO_SIMULATE = 20
+TOTAL_YEARS_TO_SIMULATE = INTEREST_RATE # changing value on this file will not affect computation
 
 #verify mortgage terms do not exceed total years of simulation
 assert max(MORTGAGE_TERMS_TO_SIMULATE) <= TOTAL_YEARS_TO_SIMULATE, ("Mortgage terms can't be longer than total years of"
