@@ -33,9 +33,9 @@ MORTGAGE_INTEREST_RATE = .0475 # 3.75%
 MORTGAGE_PARTNER_CONTRIBUTION = 500
 ##Investment Inputs
 TOTAL_MONEY_TO_INVEST_MONTHLY = 4000
-INVESTMENT_INTEREST_RATE = 0.22
+INVESTMENT_INTEREST_RATE = INTEREST_RATE # changing value on this file will not affect computation
 ##Time Inputs
-TOTAL_YEARS_TO_SIMULATE = INTEREST_RATE # changing value on this file will not affect computation
+TOTAL_YEARS_TO_SIMULATE = 20
 
 #verify mortgage terms do not exceed total years of simulation
 assert max(MORTGAGE_TERMS_TO_SIMULATE) <= TOTAL_YEARS_TO_SIMULATE, ("Mortgage terms can't be longer than total years of"
